@@ -1,0 +1,37 @@
+- hosts: localhost
+  become: yes
+  become_user: root
+  tasks:
+    - name: Download Jenkins repository configuration
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+
+    - name: Import Jenkins GPG key
+      ansible.builtin.rpm_key:
+        state: present
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+    - name: Upgrade all packages
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest
+
+    - name: Install Java
+      ansible.builtin.dnf:
+        name: java-17-openjdk
+        state: present
+
+    - name: Install Jenkins
+      ansible.builtin.dnf:
+        name: jenkins
+        state: latest
+
+    - name: Daemon-reload to pick up config changes
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Start Jenkins
+      ansible.builtin.systemd:
+        name: jenkins
+        state: started
