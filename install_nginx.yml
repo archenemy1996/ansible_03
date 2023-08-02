@@ -1,0 +1,28 @@
+- name: Install Nginx and configure reverse proxy for Jenkins
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Install Nginx
+      dnf:
+        name: nginx
+        state: present
+
+    - name: Configure Nginx for Jenkins
+      template:
+        src: nginx_jenkins.conf.j2
+        dest: /etc/nginx/conf.d/jenkins.conf
+      notify:
+        - Restart Nginx
+
+    - name: Disable default Nginx virtual host
+      file:
+        path: /etc/nginx/conf.d/default.conf
+        state: absent
+      notify:
+        - Restart Nginx
+
+  handlers:
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
